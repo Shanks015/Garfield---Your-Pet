@@ -56,6 +56,8 @@ dependencies:
   cupertino_icons: ^1.0.8
   app_links: ^7.0.0
   protocol_handler: ^0.2.0
+  rive: ^0.14.9
+  audioplayers: ^6.0.0
 
 dev_dependencies:
   flutter_test:
@@ -69,7 +71,9 @@ flutter:
   assets:
     - .env
     - assets/images/garfield.ico
+    - assets/images/cat-wthout-bg.riv
     - assets/images/floating_idle/
     - assets/images/standing_idle/
     - assets/images/left_swing/
     - assets/images/right_swing/
+    - assets/sounds/meow.wav

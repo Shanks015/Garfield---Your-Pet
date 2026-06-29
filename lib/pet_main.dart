@@ -106,6 +106,8 @@ class FlowCatApp extends StatefulWidget {
 }
 
 class _FlowCatAppState extends State<FlowCatApp> with TrayListener {
+  String _selectedPet = 'garfield';
+
   @override
   void initState() {
     super.initState();
@@ -127,6 +129,17 @@ class _FlowCatAppState extends State<FlowCatApp> with TrayListener {
       final menu = Menu(
         items: [
           MenuItem(key: 'open_main', label: 'Open FlowDay'),
+          MenuItem.separator(),
+          MenuItem.checkbox(
+            key: 'pet_garfield', 
+            label: 'Pet: Garfield',
+            checked: _selectedPet == 'garfield',
+          ),
+          MenuItem.checkbox(
+            key: 'pet_cat', 
+            label: 'Pet: Rive Cat',
+            checked: _selectedPet == 'cat',
+          ),
           MenuItem.separator(),
           MenuItem(key: 'exit_pet', label: 'Exit Pet'),
         ],
@@ -154,6 +167,16 @@ class _FlowCatAppState extends State<FlowCatApp> with TrayListener {
   void onTrayMenuItemClick(MenuItem menuItem) async {
     if (menuItem.key == 'open_main') {
       _openMainApp();
+    } else if (menuItem.key == 'pet_garfield') {
+      setState(() {
+        _selectedPet = 'garfield';
+      });
+      _initSystemTray(); // Refresh menu checkboxes
+    } else if (menuItem.key == 'pet_cat') {
+      setState(() {
+        _selectedPet = 'cat';
+      });
+      _initSystemTray(); // Refresh menu checkboxes
     } else if (menuItem.key == 'exit_pet') {
       await trayManager.destroy();
       windowManager.destroy();
@@ -196,6 +219,7 @@ class _FlowCatAppState extends State<FlowCatApp> with TrayListener {
           child: PetUi(
             eventStream: _petEventStreamController.stream,
             onTap: _resetIntervals,
+            petType: _selectedPet,
           ),
         ),
       ),

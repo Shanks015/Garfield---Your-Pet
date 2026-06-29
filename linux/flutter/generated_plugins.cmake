@@ -3,8 +3,10 @@
 #
 
 list(APPEND FLUTTER_PLUGIN_LIST
+  audioplayers_linux
   gtk
   isar_flutter_libs
+  rive_native
   screen_retriever
   tray_manager
   url_launcher_linux

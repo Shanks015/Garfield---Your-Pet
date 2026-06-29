@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'dart:convert';
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -43,12 +44,113 @@ class NotificationService {
   SyncService? _syncService;
   String? _userId;
 
+  Timer? _petReminderTimer;
+  final Map<String, DateTime> _lastTriggeredReminders = {};
+
   void attachPresence(PresenceService ps) => _presenceService = ps;
   
   void initDependencies({required Isar isar, required SyncService syncService, required String userId}) {
     _isar = isar;
     _syncService = syncService;
     _userId = userId;
+    startPetReminderChecking();
+  }
+
+  void startPetReminderChecking() {
+    _petReminderTimer?.cancel();
+    _petReminderTimer = Timer.periodic(const Duration(minutes: 1), (timer) {
+      _checkAndTriggerPetReminders();
+    });
+    // Run once after 5 seconds to check reminders on startup
+    Timer(const Duration(seconds: 5), () {
+      _checkAndTriggerPetReminders();
+    });
+  }
+
+  Future<void> _checkAndTriggerPetReminders() async {
+    if (_isar == null || _userId == null) return;
+    
+    try {
+      final prefs = await _isar!.userPreferencesLocals.filter().userIdEqualTo(_userId!).findFirst();
+      if (prefs == null) return;
+
+      final now = DateTime.now();
+      final startOfToday = DateTime(now.year, now.month, now.day);
+      
+      // Helper function to check interval-based reminders
+      Future<void> checkIntervalReminder(String logType, int intervalMin, String message, String animation) async {
+        if (intervalMin <= 0) return;
+        
+        final lastLog = await _isar!.healthLogLocals
+            .filter()
+            .userIdEqualTo(_userId!)
+            .and()
+            .logTypeEqualTo(logType)
+            .sortByLoggedAtDesc()
+            .findFirst();
+            
+        DateTime lastActionTime = lastLog?.loggedAt ?? now.subtract(Duration(minutes: intervalMin));
+        
+        final lastTriggered = _lastTriggeredReminders[logType];
+        if (lastTriggered != null && lastTriggered.isAfter(lastActionTime)) {
+          lastActionTime = lastTriggered;
+        }
+        
+        if (now.difference(lastActionTime).inMinutes >= intervalMin) {
+          await triggerPetNotification(message, animation);
+          _lastTriggeredReminders[logType] = now;
+        }
+      }
+
+      // Check Water
+      await checkIntervalReminder('water', prefs.waterIntervalMin, 'Time to drink water! 💧 Stay hydrated!', 'water_reminder');
+
+      // Check Walk
+      await checkIntervalReminder('walk', prefs.walkIntervalMin, 'Time to stretch and walk around! 🚶', 'walk_reminder');
+
+      // Check Break/Rest
+      await checkIntervalReminder('break', prefs.breakIntervalMin, 'Time to take a screen break! ☕', 'break_reminder');
+
+      // Daily Exercise check (exerciseReminderHour)
+      final exerciseHour = prefs.exerciseReminderHour;
+      final lastExerciseTrigger = _lastTriggeredReminders['exercise'];
+      final exerciseTriggeredToday = lastExerciseTrigger != null &&
+          lastExerciseTrigger.year == now.year &&
+          lastExerciseTrigger.month == now.month &&
+          lastExerciseTrigger.day == now.day;
+          
+      if (now.hour >= exerciseHour && !exerciseTriggeredToday) {
+        final todayWorkoutLog = await _isar!.healthLogLocals
+            .filter()
+            .userIdEqualTo(_userId!)
+            .and()
+            .logTypeEqualTo('workout')
+            .and()
+            .loggedAtGreaterThan(startOfToday)
+            .findFirst();
+            
+        if (todayWorkoutLog == null) {
+          await triggerPetNotification('Time for your daily workout! 💪 Let\'s exercise!', 'workout_reminder');
+          _lastTriggeredReminders['exercise'] = now;
+        }
+      }
+
+      // Daily Study/Work check (workStartHour)
+      final studyStartHour = prefs.workStartHour;
+      final lastStudyTrigger = _lastTriggeredReminders['study'];
+      final studyTriggeredToday = lastStudyTrigger != null &&
+          lastStudyTrigger.year == now.year &&
+          lastStudyTrigger.month == now.month &&
+          lastStudyTrigger.day == now.day;
+          
+      if (now.hour >= studyStartHour && now.hour < prefs.workEndHour && !studyTriggeredToday) {
+        await triggerPetNotification('Study time starts now! 📚 Focus and do your best!', 'study_reminder');
+        _lastTriggeredReminders['study'] = now;
+      }
+
+    } catch (e) {
+      debugPrint('Error checking pet reminders: $e');
+    }
   }
 
   Future<void> initialize() async {

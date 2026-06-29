@@ -4,10 +4,12 @@
 
 list(APPEND FLUTTER_PLUGIN_LIST
   app_links
+  audioplayers_windows
   connectivity_plus
   isar_flutter_libs
   passkeys_windows
   protocol_handler_windows
+  rive_native
   screen_retriever
   tray_manager
   url_launcher_windows

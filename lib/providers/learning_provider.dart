@@ -125,8 +125,7 @@ class LearningActions {
       ..loggedDate = DateTime.now()
       ..durationMin = durationMin
       ..completed = completed
-      ..notes = notes
-      ..updatedAt = difficulty ?? ''; // Map difficulty to notes/field
+      ..notes = notes;
       
     log.difficulty = difficulty;
     log.updatedAt = DateTime.now();

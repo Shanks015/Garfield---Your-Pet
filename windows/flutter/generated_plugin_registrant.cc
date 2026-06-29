@@ -7,10 +7,12 @@
 #include "generated_plugin_registrant.h"
 
 #include <app_links/app_links_plugin_c_api.h>
+#include <audioplayers_windows/audioplayers_windows_plugin.h>
 #include <connectivity_plus/connectivity_plus_windows_plugin.h>
 #include <isar_flutter_libs/isar_flutter_libs_plugin.h>
 #include <passkeys_windows/passkeys_windows_plugin.h>
 #include <protocol_handler_windows/protocol_handler_windows_plugin_c_api.h>
+#include <rive_native/rive_native_plugin.h>
 #include <screen_retriever/screen_retriever_plugin.h>
 #include <tray_manager/tray_manager_plugin.h>
 #include <url_launcher_windows/url_launcher_windows.h>
@@ -19,6 +21,8 @@
 void RegisterPlugins(flutter::PluginRegistry* registry) {
   AppLinksPluginCApiRegisterWithRegistrar(
       registry->GetRegistrarForPlugin("AppLinksPluginCApi"));
+  AudioplayersWindowsPluginRegisterWithRegistrar(
+      registry->GetRegistrarForPlugin("AudioplayersWindowsPlugin"));
   ConnectivityPlusWindowsPluginRegisterWithRegistrar(
       registry->GetRegistrarForPlugin("ConnectivityPlusWindowsPlugin"));
   IsarFlutterLibsPluginRegisterWithRegistrar(
@@ -27,6 +31,8 @@ void RegisterPlugins(flutter::PluginRegistry* registry) {
       registry->GetRegistrarForPlugin("PasskeysWindowsPlugin"));
   ProtocolHandlerWindowsPluginCApiRegisterWithRegistrar(
       registry->GetRegistrarForPlugin("ProtocolHandlerWindowsPluginCApi"));
+  RiveNativePluginRegisterWithRegistrar(
+      registry->GetRegistrarForPlugin("RiveNativePlugin"));
   ScreenRetrieverPluginRegisterWithRegistrar(
       registry->GetRegistrarForPlugin("ScreenRetrieverPlugin"));
   TrayManagerPluginRegisterWithRegistrar(
